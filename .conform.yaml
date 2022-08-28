@@ -7,7 +7,7 @@ policies:
         imperative: false
       body:
         required: false
-      # maximumOfOneCommit: true
+      maximumOfOneCommit: true
       conventional:
         types:
           - feat

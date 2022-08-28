@@ -3,6 +3,6 @@ repos:
     rev: v0.1.0-alpha.26
     hooks:
       - id: conform
-        entry: "conform enforce --commit-ref refs/head/main --commit-msg-file"
+        entry: "conform enforce --commit-ref refs/remotes/origin/main --commit-msg-file"
         stages:
           - commit-msg
