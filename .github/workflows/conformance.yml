@@ -27,10 +27,17 @@ jobs:
         continue-on-error: true
         id: conform
         run: |
-          conform enforce --commit-ref refs/remotes/origin/main |& tee -a conform_log.txt
-          output=$(cat conform_log.txt)
+          CONFORM_LOG_PATH="conform_log.txt"
+          conform enforce --commit-ref refs/remotes/origin/main |& tee -a $CONFORM_LOG_PATH
+          output=$(cat $CONFORM_LOG_PATH)
           output="${output//$'\n'/\\n}"
           echo "::set-output name=output::${output}"
+          if grep -qE "\sFAILED\s" $CONFORM_LOG_PATH
+          then
+              exit 1
+          else
+              exit 0
+          fi
 
       - name: Update pull request
         uses: actions/github-script@v6
