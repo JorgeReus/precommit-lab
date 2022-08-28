@@ -1,0 +1,61 @@
+---
+permissions:
+  contents: read # Required to read the contents of the repo
+  pull-requests: write # Required to put comments on the PR itself
+
+name: Conformance workflow
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Setup Conform
+        run: |
+          curl -sLo conform https://github.com/siderolabs/conform/releases/download/v0.1.0-alpha.26/conform-linux-amd64
+          chmod +x conform
+          sudo mv conform /usr/bin/conform
+
+      - name: Run conform
+        continue-on-error: true
+        id: conform
+        run: |
+          conform enforce --commit-ref refs/remotes/origin/main |& tee -a conform_log.txt
+          output=$(cat conform_log.txt)
+          output="${output//$'\n'/\\n}"
+          echo "::set-output name=output::${output}"
+
+      - name: Update pull request
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Conform Outcome \`${{ steps.conform.outcome }}\`
+            [Logs](https://github.com/${context.payload.repository.full_name}/commit/${context.payload.pull_request.head.sha}/checks)
+
+            <details><summary>Show Output</summary>
+
+            \`\`\`\n
+              ${{ steps.conform.outputs.output }}
+            \`\`\`
+            </details>
+
+
+            *Pushed by: @${{ github.actor }}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+      - name: Conform Status
+        if: steps.conform.outcome == 'failure'
+        run: exit 1
