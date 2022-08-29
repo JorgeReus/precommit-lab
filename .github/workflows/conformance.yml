@@ -32,7 +32,7 @@ jobs:
           output=$(cat $CONFORM_LOG_PATH)
           output="${output//$'\n'/\\n}"
           echo "::set-output name=output::${output}"
-          if grep -qE "\sFAILED\s" $CONFORM_LOG_PATH
+          if grep -qiE "\sFAILED\s" $CONFORM_LOG_PATH
           then
               exit 1
           else
