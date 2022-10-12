@@ -1,4 +1,4 @@
-# Precommit LAB
+# Precommit LAB test
 
 Precommit laboratory to play around with different precommit hooks
 
